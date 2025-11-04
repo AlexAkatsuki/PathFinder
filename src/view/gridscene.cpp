@@ -38,7 +38,7 @@ void GridScene::drawGrid() {
             addItem(rect);
 
             if (cellType == CellType::Start || cellType == CellType::End) {
-                QString letter = (cellType == CellType::Start) ? "A" : "Б";
+                QString letter = (cellType == CellType::Start) ? tr("A") : tr("Б");
                 QColor textColor = (cellType == CellType::Start) ? Qt::black : Qt::white;
 
                 QGraphicsTextItem *textItem = new QGraphicsTextItem(letter);

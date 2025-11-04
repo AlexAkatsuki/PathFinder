@@ -93,7 +93,7 @@ void MainWindow::setupUI() {
     mainLayout->addWidget(m_instructionsLabel);
     mainLayout->addStretch();
 
-    QDockWidget *controlDock = new QDockWidget("Управление", this);
+    QDockWidget *controlDock = new QDockWidget(tr("Управление"), this);
     controlDock->setWidget(controlWidget);
     controlDock->setFixedWidth(DOCK_WIDTH);
     controlDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
@@ -128,15 +128,15 @@ void MainWindow::onGenerateClicked() {
 
 void MainWindow::onFindPathClicked() {
     if (m_model->width() == 0 || m_model->height() == 0) {
-        showError("Пожалуйста, сначала создайте сетку (нажмите 'Генерировать')");
+        showError(tr("Пожалуйста, сначала создайте сетку (нажмите 'Генерировать')"));
         return;
     }
     if (!m_model->hasStartPoint()) {
-        showError("Пожалуйста, установите начальную точку А (левая кнопка мыши)");
+        showError(tr("Пожалуйста, установите начальную точку А (левая кнопка мыши)"));
         return;
     }
     if (!m_model->hasEndPoint()) {
-        showError("Пожалуйста, установите конечную точку Б (левая кнопка мыши)");
+        showError(tr("Пожалуйста, установите конечную точку Б (левая кнопка мыши)"));
         return;
     }
     m_findPathButton->setEnabled(false);
@@ -153,7 +153,7 @@ void MainWindow::onCalculationFinished() {
 void MainWindow::onPathNotFound() {
     m_findPathButton->setEnabled(true);
 
-    showError("Не удалось найти путь от точки А до точки Б!\n\n"
+    showError(tr("Не удалось найти путь от точки А до точки Б!\n\n"
               "Возможные причины:\n"
               "• Одна из точек окружена препятствиями\n"
               "• Между точками нет прохода\n"
@@ -161,7 +161,7 @@ void MainWindow::onPathNotFound() {
               "Попробуйте:\n"
               "• Перегенерировать сетку\n"
               "• Переместить точки в другие места\n"
-              );
+                 ));
 }
 
 bool MainWindow::validateInput() {
@@ -169,20 +169,22 @@ bool MainWindow::validateInput() {
     int height = m_heightSpinBox->value();
 
     if (width * height > MAX_REC_GRID_SIZE) {
-        showError("Выбран большой размер сетки (" + QString::number(width) + "×" +
-            QString::number(height) + " = " + QString::number(width * height) + " ячеек).\n\n"
-            "Это может замедлить:\n"
-            "• Генерацию сетки\n"
-            "• Поиск пути\n"
-            "• Отображение\n\n"
-            "Рекомендуется использовать размер до 50×50."
-        );
+        showError(tr("Выбран большой размер сетки (%1×%2 = %3 ячеек).\n\n"
+                    "Это может замедлить:\n"
+                    "• Генерацию сетки\n"
+                    "• Поиск пути\n"
+                    "• Отображение\n\n"
+                    "Рекомендуется использовать размер до 50×50.")
+                    .arg(width)
+                    .arg(height)
+                    .arg(width * height)
+                    );
     }
     return true;
 }
 
 void MainWindow::showError(const QString &message) {
-    QMessageBox::critical(this, "Ошибка", message);
+    QMessageBox::critical(this, tr("Ошибка"), message);
 }
 
 void MainWindow::wheelEvent(QWheelEvent *event) {
