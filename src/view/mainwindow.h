@@ -33,6 +33,7 @@ private slots:
     void onGenerateClicked();
     void onFindPathClicked();
     void onCalculationFinished();
+    void onPathNotFound();
     void showError(const QString &message);
 
 private:

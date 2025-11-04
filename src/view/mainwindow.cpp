@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_pathFinder(new PathFinder(m_model, this))
     , m_scene(nullptr)
     , m_settings("PathFinder", "PathFindingApp") {
+
     setupUI();
     setupConnections();
     restoreWindowState();
@@ -109,6 +110,7 @@ void MainWindow::setupConnections() {
     connect(m_generateButton, &QPushButton::clicked, this, &MainWindow::onGenerateClicked);
     connect(m_findPathButton, &QPushButton::clicked, this, &MainWindow::onFindPathClicked);
     connect(m_pathFinder, &PathFinder::calculationFinished, this, &MainWindow::onCalculationFinished);
+    connect(m_pathFinder, &PathFinder::pathNotFound, this, &MainWindow::onPathNotFound);
 }
 
 void MainWindow::onGenerateClicked() {
@@ -157,25 +159,42 @@ void MainWindow::onCalculationFinished() {
     m_findPathButton->setEnabled(true);
 }
 
-void MainWindow::showError(const QString &message) {
-    QMessageBox::critical(this, "Ошибка", message);
+void MainWindow::onPathNotFound() {
+    m_findPathButton->setEnabled(true);
+
+    showError("Не удалось найти путь от точки А до точки Б!\n\n"
+              "Возможные причины:\n"
+              "• Одна из точек окружена препятствиями\n"
+              "• Между точками нет прохода\n"
+              "• Точки находятся в изолированных областях\n\n"
+              "Попробуйте:\n"
+              "• Перегенерировать сетку\n"
+              "• Переместить точки в другие места\n"
+              );
+
+    qDebug() << "Path not found between points";
 }
 
 bool MainWindow::validateInput() {
     int width = m_widthSpinBox->value();
     int height = m_heightSpinBox->value();
 
-    if (width <= 0 || height <= 0) {
-        showError("Ширина и высота должны быть положительными числами");
-        return false;
-    }
-
-    if (width > 100 || height > 100) {
-        showError("Размер сетки слишком большой. Максимум 100x100");
-        return false;
+    if (width * height > 2500) { // 50×50
+        showError("Выбран большой размер сетки (" + QString::number(width) + "×" +
+            QString::number(height) + " = " + QString::number(width * height) + " ячеек).\n\n"
+            "Это может замедлить:\n"
+            "• Генерацию сетки\n"
+            "• Поиск пути\n"
+            "• Отображение\n\n"
+            "Рекомендуется использовать размер до 50×50."
+        );
     }
 
     return true;
+}
+
+void MainWindow::showError(const QString &message) {
+    QMessageBox::critical(this, "Ошибка", message);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

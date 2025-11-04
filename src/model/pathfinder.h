@@ -28,6 +28,7 @@ signals:
     void pathFound(const std::vector<QPoint> &path);
     void pathToFound(const std::vector<QPoint> &path);
     void calculationFinished();
+    void pathNotFound(); // Добавляем новый сигнал
 
 private:
     GridModel *m_model;

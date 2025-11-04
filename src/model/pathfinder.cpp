@@ -23,8 +23,21 @@ void PathFinder::findPath() {
         return;
     }
 
+    // Проверяем, не слишком ли большое поле для поиска
+    if (m_model->width() * m_model->height() > 10000) {
+        qWarning() << "Grid too large for pathfinding";
+        emit pathFound({});
+        emit calculationFinished();
+        return;
+    }
+
     auto path = bfs(m_model->startPoint(), m_model->endPoint());
-    emit pathFound(path);
+
+    if (path.empty())
+        emit pathNotFound();
+    else
+        emit pathFound(path);
+
     emit calculationFinished();
 }
 
