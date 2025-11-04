@@ -40,9 +40,7 @@ MainWindow::~MainWindow() {
 
 void MainWindow::setupUI() {
     setWindowTitle("Path Finder");
-    resize(1000, 700);
 
-    // Создаем центральный graphics view
     m_graphicsView = new QGraphicsView(this);
     m_scene = new GridScene(m_model, m_pathFinder, this);
     m_graphicsView->setScene(m_scene);
@@ -51,7 +49,6 @@ void MainWindow::setupUI() {
 
     setCentralWidget(m_graphicsView);
 
-    // Создаем элементы управления
     m_widthLabel = new QLabel("Ширина:");
     m_widthSpinBox = new QSpinBox();
     m_widthSpinBox->setMinimum(5);
@@ -78,11 +75,9 @@ void MainWindow::setupUI() {
     m_instructionsLabel->setAlignment(Qt::AlignCenter);
     m_instructionsLabel->setWordWrap(true);
 
-    // Создаем layout для элементов управления
     QWidget *controlWidget = new QWidget();
     QVBoxLayout *mainLayout = new QVBoxLayout(controlWidget);
 
-    // Группа размера сетки
     QHBoxLayout *sizeLayout = new QHBoxLayout();
     sizeLayout->addWidget(m_widthLabel);
     sizeLayout->addWidget(m_widthSpinBox);
@@ -91,15 +86,13 @@ void MainWindow::setupUI() {
     sizeLayout2->addWidget(m_heightLabel);
     sizeLayout2->addWidget(m_heightSpinBox);
 
-    // Добавляем все в основной layout
     mainLayout->addLayout(sizeLayout);
     mainLayout->addLayout(sizeLayout2);
     mainLayout->addWidget(m_generateButton);
     mainLayout->addWidget(m_findPathButton);
     mainLayout->addWidget(m_instructionsLabel);
-    mainLayout->addStretch(); // Растягивающийся элемент для выравнивания
+    mainLayout->addStretch();
 
-    // Создаем dock widget
     QDockWidget *controlDock = new QDockWidget("Управление", this);
     controlDock->setWidget(controlWidget);
     controlDock->setFixedWidth(200);
@@ -125,32 +118,22 @@ void MainWindow::onGenerateClicked() {
     m_model->generateRandomWalls();
     m_scene->clearPath();
 
-    // Принудительно обновляем view
     m_graphicsView->viewport()->update();
 }
 
 void MainWindow::onFindPathClicked() {
-    qDebug() << "=== Find Path Clicked ===";
-    qDebug() << "Start point exists:" << m_model->hasStartPoint() << "point:" << m_model->startPoint();
-    qDebug() << "End point exists:" << m_model->hasEndPoint() << "point:" << m_model->endPoint();
-
-    // Проверяем создана ли сетка
     if (m_model->width() == 0 || m_model->height() == 0) {
         showError("Пожалуйста, сначала создайте сетку (нажмите 'Генерировать')");
         return;
     }
-
     if (!m_model->hasStartPoint()) {
         showError("Пожалуйста, установите начальную точку А (левая кнопка мыши)");
         return;
     }
-
     if (!m_model->hasEndPoint()) {
         showError("Пожалуйста, установите конечную точку Б (левая кнопка мыши)");
         return;
     }
-
-    qDebug() << "Starting path finding...";
     m_findPathButton->setEnabled(false);
     m_pathFinder->findPath();
 }
@@ -171,15 +154,13 @@ void MainWindow::onPathNotFound() {
               "• Перегенерировать сетку\n"
               "• Переместить точки в другие места\n"
               );
-
-    qDebug() << "Path not found between points";
 }
 
 bool MainWindow::validateInput() {
     int width = m_widthSpinBox->value();
     int height = m_heightSpinBox->value();
 
-    if (width * height > 2500) { // 50×50
+    if (width * height > 2500) {
         showError("Выбран большой размер сетки (" + QString::number(width) + "×" +
             QString::number(height) + " = " + QString::number(width * height) + " ячеек).\n\n"
             "Это может замедлить:\n"
@@ -189,7 +170,6 @@ bool MainWindow::validateInput() {
             "Рекомендуется использовать размер до 50×50."
         );
     }
-
     return true;
 }
 
@@ -197,14 +177,8 @@ void MainWindow::showError(const QString &message) {
     QMessageBox::critical(this, "Ошибка", message);
 }
 
-void MainWindow::closeEvent(QCloseEvent *event) {
-    saveWindowState();
-    QMainWindow::closeEvent(event);
-}
-
 void MainWindow::wheelEvent(QWheelEvent *event) {
     if (event->modifiers() & Qt::ControlModifier) {
-        // Масштабирование с Ctrl + Колесо
         double scaleFactor = 1.1;
         if (event->angleDelta().y() < 0)
             scaleFactor = 1.0 / scaleFactor;
@@ -215,14 +189,31 @@ void MainWindow::wheelEvent(QWheelEvent *event) {
         QMainWindow::wheelEvent(event);
 }
 
+void MainWindow::closeEvent(QCloseEvent *event) {
+    saveWindowState();
+    QMainWindow::closeEvent(event);
+}
+
 void MainWindow::saveWindowState() {
-    m_settings.setValue("geometry", saveGeometry());
-    m_settings.setValue("windowState", saveState());
+    m_settings.setValue("window/geometry", saveGeometry());
+    m_settings.setValue("window/state", saveState());
+
+    m_settings.setValue("settings/width", m_widthSpinBox->value());
+    m_settings.setValue("settings/height", m_heightSpinBox->value());
 }
 
 void MainWindow::restoreWindowState() {
-    if (m_settings.contains("geometry"))
-        restoreGeometry(m_settings.value("geometry").toByteArray());
-    if (m_settings.contains("windowState"))
-        restoreState(m_settings.value("windowState").toByteArray());
+    if (m_settings.contains("window/geometry")) {
+        restoreGeometry(m_settings.value("window/geometry").toByteArray());
+    } else {
+        resize(1000, 700);
+        move(100, 100);
+    }
+
+    if (m_settings.contains("window/state"))
+        restoreState(m_settings.value("window/state").toByteArray());
+    if (m_settings.contains("settings/width"))
+        m_widthSpinBox->setValue(m_settings.value("settings/width").toInt());
+    if (m_settings.contains("settings/height"))
+        m_heightSpinBox->setValue(m_settings.value("settings/height").toInt());
 }

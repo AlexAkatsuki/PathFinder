@@ -9,7 +9,7 @@
 
 //#include "gridmodel.h"
 
-class PathFinder : public QObject {
+class PathFinder final : public QObject {
     Q_OBJECT
 
     static constexpr uint16_t BFS_PATH_LIMIT_cnt = 1000;

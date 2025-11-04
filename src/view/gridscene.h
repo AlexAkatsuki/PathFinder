@@ -6,7 +6,7 @@
 #include "../model/gridmodel.h"
 #include "../model/pathfinder.h"
 
-class GridScene : public QGraphicsScene {
+class GridScene final : public QGraphicsScene {
     Q_OBJECT
 
     static constexpr int CELL_SIZE = 30;

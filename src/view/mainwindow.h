@@ -12,7 +12,6 @@ class QVBoxLayout;
 class QHBoxLayout;
 class QWidget;
 class QDockWidget;
-
 class GridModel;
 class PathFinder;
 class GridScene;
@@ -49,6 +48,9 @@ private:
     GridModel *m_model;
     PathFinder *m_pathFinder;
     GridScene *m_scene;
+
+    QDockWidget *m_controlDock;
+
     QSettings m_settings;
 
     void setupUI();

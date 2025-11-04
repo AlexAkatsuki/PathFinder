@@ -15,7 +15,7 @@ enum class CellType {
     Visited
 };
 
-class GridModel : public QObject {
+class GridModel final : public QObject {
     Q_OBJECT
 
     static constexpr int8_t MAX_WIDTH_cnt = 100;
