@@ -164,7 +164,7 @@ bool MainWindow::validateInput() {
     int width = m_widthSpinBox->value();
     int height = m_heightSpinBox->value();
 
-    if (width * height > MAX_GRID_SIZE) {
+    if (width * height > MAX_REC_GRID_SIZE) {
         showError("Выбран большой размер сетки (" + QString::number(width) + "×" +
             QString::number(height) + " = " + QString::number(width * height) + " ячеек).\n\n"
             "Это может замедлить:\n"

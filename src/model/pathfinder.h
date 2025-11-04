@@ -7,12 +7,12 @@
 
 #include <vector>
 
-//#include "gridmodel.h"
+#include "gridmodel.h"
 
 class PathFinder final : public QObject {
     Q_OBJECT
 
-    static constexpr uint16_t BFS_PATH_LIMIT_cnt = 1000;
+    static constexpr uint16_t BFS_PATH_LIMIT_cnt = 10000;
 
     static constexpr uint16_t GRID_SIZE_LIMIT = 10000;
 
@@ -28,7 +28,7 @@ signals:
     void pathFound(const std::vector<QPoint> &path);
     void pathToFound(const std::vector<QPoint> &path);
     void calculationFinished();
-    void pathNotFound(); // Добавляем новый сигнал
+    void pathNotFound();
 
 private:
     GridModel *m_model;

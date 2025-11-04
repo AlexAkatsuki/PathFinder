@@ -46,6 +46,7 @@ private:
 
     void updatePathDisplay();
     void updatePreviewPath();
+    void updateMainPathDisplay();
 
     void onPreviewTimerTimeout();
 };

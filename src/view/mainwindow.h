@@ -26,7 +26,7 @@ class MainWindow : public QMainWindow {
     static constexpr int DEFAULT_WIDTH = 1000;
     static constexpr int DEFAULT_HEIGHT = 700;
 
-    static constexpr uint16_t MAX_GRID_SIZE = 2500;
+    static constexpr uint16_t MAX_REC_GRID_SIZE = 2500;
 
     static constexpr int DOCK_WIDTH = 200;
 
