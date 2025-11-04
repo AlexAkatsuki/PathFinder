@@ -67,11 +67,15 @@ void MainWindow::setupUI() {
     m_findPathButton = new QPushButton("Найти путь");
 
     m_instructionsLabel = new QLabel(
-        "ЛКМ - установить точку А\n"
-        "Shift + ЛКМ - установить точку Б\n"
+        "Установка точек (только левая кнопка мыши):\n"
+        "• Первый клик - точка А (зеленая)\n"
+        "• Второй клик - точка Б (красная)\n"
+        "• Третий клик - сброс и новая точка А\n"
+        "• И так далее...\n\n"
         "Ctrl + Колесо - масштабирование"
         );
     m_instructionsLabel->setAlignment(Qt::AlignCenter);
+    m_instructionsLabel->setWordWrap(true);
 
     // Создаем layout для элементов управления
     QWidget *controlWidget = new QWidget();
@@ -124,16 +128,21 @@ void MainWindow::onGenerateClicked() {
 }
 
 void MainWindow::onFindPathClicked() {
-    if (!m_model->isValidPoint(m_model->startPoint())) {
-        showError("Пожалуйста, установите начальную точку (левая кнопка мыши)");
+    qDebug() << "=== Find Path Clicked ===";
+    qDebug() << "Start point exists:" << m_model->hasStartPoint() << "point:" << m_model->startPoint();
+    qDebug() << "End point exists:" << m_model->hasEndPoint() << "point:" << m_model->endPoint();
+
+    if (!m_model->hasStartPoint()) {
+        showError("Пожалуйста, установите начальную точку А (левая кнопка мыши)");
         return;
     }
 
-    if (!m_model->isValidPoint(m_model->endPoint())) {
-        showError("Пожалуйста, установите конечную точку (Shift + левая кнопка мыши)");
+    if (!m_model->hasEndPoint()) {
+        showError("Пожалуйста, установите конечную точку Б (левая кнопка мыши)");
         return;
     }
 
+    qDebug() << "Starting path finding...";
     m_findPathButton->setEnabled(false);
     m_pathFinder->findPath();
 }

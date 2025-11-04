@@ -14,37 +14,63 @@ GridScene::GridScene(GridModel *model, PathFinder *pathFinder, QObject *parent)
     setBackgroundBrush(QBrush(Qt::lightGray));
 }
 
-void GridScene::drawGrid() {
+void GridScene::drawGrid()
+{
+    qDebug() << "Drawing grid:" << m_model->width() << "x" << m_model->height();
+
+    // Полностью очищаем сцену
     clear();
 
-    if (m_model->width() <= 0 || m_model->height() <= 0)
+    if (m_model->width() <= 0 || m_model->height() <= 0) {
         return;
+    }
 
+    const int cellSize = 30;
+
+    // Рисуем все ячейки
     for (int y = 0; y < m_model->height(); ++y) {
         for (int x = 0; x < m_model->width(); ++x) {
             auto cellType = m_model->getCell(x, y);
             auto color = getCellColor(cellType);
 
             QGraphicsRectItem *rect = new QGraphicsRectItem(
-                x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                x * cellSize, y * cellSize, cellSize, cellSize);
 
             rect->setBrush(QBrush(color));
             rect->setPen(QPen(Qt::black, 1));
             rect->setData(0, QPoint(x, y));
 
             addItem(rect);
+
+            // Добавляем буквы для точек А и Б
+            if (cellType == CellType::Start || cellType == CellType::End) {
+                QString letter = (cellType == CellType::Start) ? "A" : "Б";
+                QColor textColor = (cellType == CellType::Start) ? Qt::black : Qt::white;
+
+                QGraphicsTextItem *textItem = new QGraphicsTextItem(letter);
+                textItem->setDefaultTextColor(textColor);
+                textItem->setFont(QFont("Arial", 12, QFont::Bold));
+
+                // Центрируем текст в ячейке
+                QRectF textRect = textItem->boundingRect();
+                textItem->setPos(
+                    x * cellSize + (cellSize - textRect.width()) / 2,
+                    y * cellSize + (cellSize - textRect.height()) / 2
+                    );
+
+                addItem(textItem);
+            }
         }
     }
 
-    QRectF sceneRect(0, 0, m_model->width() * CELL_SIZE, m_model->height() * CELL_SIZE);
+    // Устанавливаем размер сцены
+    QRectF sceneRect(0, 0, m_model->width() * cellSize, m_model->height() * cellSize);
     setSceneRect(sceneRect);
 }
 
 void GridScene::clearPath() {
     m_currentPath.clear();
     m_previewPath.clear();
-
-    drawGrid();
 }
 
 void GridScene::onGridChanged() {
@@ -63,28 +89,43 @@ void GridScene::onPathToFound(const std::vector<QPoint> &path) {
 
 void GridScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     QPoint gridPos = sceneToGrid(event->scenePos());
+    qDebug() << "=== Mouse Press ===";
+    qDebug() << "Grid position:" << gridPos;
+    qDebug() << "Current hasStart:" << m_model->hasStartPoint() << "hasEnd:" << m_model->hasEndPoint();
 
-    if (m_model->isValidPoint(gridPos)) {
-        if (event->button() == Qt::LeftButton) {
-            if (event->modifiers() & Qt::ShiftModifier)
-                m_model->setEndPoint(gridPos);
-            else
-                m_model->setStartPoint(gridPos);
+    if (m_model->isValidPoint(gridPos) && event->button() == Qt::LeftButton) {
+
+        if (!m_model->isWalkable(gridPos.x(), gridPos.y())) {
+            qDebug() << "Cannot set point on wall";
+            QGraphicsScene::mousePressEvent(event);
+            return;
+        }
+
+        // Простая логика
+        if (!m_model->hasStartPoint()) {
+            m_model->setStartPoint(gridPos);
+        }
+        else if (!m_model->hasEndPoint()) {
+            m_model->setEndPoint(gridPos);
+        }
+        else {
+            m_model->clearPoints();
+            m_model->setStartPoint(gridPos);
         }
     }
 
     QGraphicsScene::mousePressEvent(event);
 }
 
-void GridScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-    QPoint gridPos = sceneToGrid(event->scenePos());
-    if (m_model->isValidPoint(gridPos) && m_model->isValidPoint(m_model->startPoint()))
-        m_pathFinder->findPathTo(gridPos);
-    else
-        onPathToFound({});
+// void GridScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+//     QPoint gridPos = sceneToGrid(event->scenePos());
+//     if (m_model->isValidPoint(gridPos) && m_model->isValidPoint(m_model->startPoint()))
+//         m_pathFinder->findPathTo(gridPos);
+//     else
+//         onPathToFound({});
 
-    QGraphicsScene::mouseMoveEvent(event);
-}
+//     QGraphicsScene::mouseMoveEvent(event);
+// }
 
 QColor GridScene::getCellColor(CellType type) const {
     switch (type) {

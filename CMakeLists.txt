@@ -41,7 +41,6 @@ set(HEADERS
 qt_add_executable(PathFinder
     ${SOURCES}
     ${HEADERS}
-    фыв
 )
 
 target_link_libraries(PathFinder

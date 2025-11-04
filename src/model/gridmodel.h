@@ -40,6 +40,11 @@ public:
     QPoint startPoint() const { return m_start; }
     QPoint endPoint() const { return m_end; }
 
+    void clearPoints();
+
+    bool hasStartPoint() const;
+    bool hasEndPoint() const;
+
     void setStartPoint(const QPoint &point);
     void setEndPoint(const QPoint &point);
 

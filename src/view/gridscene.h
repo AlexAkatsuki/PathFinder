@@ -24,7 +24,7 @@ public slots:
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    //void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
     GridModel *m_model;
