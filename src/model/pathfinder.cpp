@@ -36,7 +36,7 @@ void PathFinder::findPathTo(const QPoint &target) {
         return;
     }
 
-    auto path = bfsWithLimit(m_model->startPoint(), target, BFS_PATH_LIMIT_cnt); // Максимум 1000 шагов для preview
+    auto path = bfsWithLimit(m_model->startPoint(), target, BFS_PATH_LIMIT_cnt);
     emit pathToFound(path);
 }
 
@@ -47,7 +47,7 @@ std::vector<QPoint> PathFinder::bfs(const QPoint &start, const QPoint &end) {
     int width = m_model->width();
     int height = m_model->height();
 
-    if (width * height > GRID_SIZE_LIMIT)//qWarning() << "BFS: Grid too large, returning empty path";
+    if (width * height > GRID_SIZE_LIMIT)
         return {};
 
     std::queue<QPoint> queue;

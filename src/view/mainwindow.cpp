@@ -132,6 +132,12 @@ void MainWindow::onFindPathClicked() {
     qDebug() << "Start point exists:" << m_model->hasStartPoint() << "point:" << m_model->startPoint();
     qDebug() << "End point exists:" << m_model->hasEndPoint() << "point:" << m_model->endPoint();
 
+    // Проверяем создана ли сетка
+    if (m_model->width() == 0 || m_model->height() == 0) {
+        showError("Пожалуйста, сначала создайте сетку (нажмите 'Генерировать')");
+        return;
+    }
+
     if (!m_model->hasStartPoint()) {
         showError("Пожалуйста, установите начальную точку А (левая кнопка мыши)");
         return;
