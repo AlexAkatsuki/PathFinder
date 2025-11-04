@@ -81,6 +81,14 @@ int GridModel::height() const {
     return m_height;
 }
 
+QPoint GridModel::startPoint() const {
+    return m_start;
+}
+
+QPoint GridModel::endPoint() const {
+    return m_end;
+}
+
 void GridModel::clearPoints() {
     if (isValidPoint(m_start)) {
         m_grid[m_start.y()][m_start.x()] = CellType::Empty;

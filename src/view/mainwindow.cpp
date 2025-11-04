@@ -25,9 +25,9 @@ MainWindow::MainWindow(QWidget *parent)
     , m_instructionsLabel(nullptr)
     , m_widthLabel(nullptr)
     , m_heightLabel(nullptr)
-    , m_model(new GridModel(this))
-    , m_pathFinder(new PathFinder(m_model, this))
     , m_scene(nullptr)
+    , m_model(new GridModel(this))
+    , m_pathFinder(new PathFinder(m_model, nullptr))
     , m_settings("PathFinder", "PathFindingApp") {
 
     setupUI();
@@ -65,7 +65,7 @@ void MainWindow::setupUI() {
     m_findPathButton = new QPushButton("Найти путь");
 
     m_instructionsLabel = new QLabel(
-        "Установка точек (только левая кнопка мыши):\n"
+        "Установка точек (ЛКМ):\n"
         "• Первый клик - точка А (зеленая)\n"
         "• Второй клик - точка Б (красная)\n"
         "• Третий клик - сброс и новая точка А\n"
@@ -96,6 +96,7 @@ void MainWindow::setupUI() {
     QDockWidget *controlDock = new QDockWidget("Управление", this);
     controlDock->setWidget(controlWidget);
     controlDock->setFixedWidth(DOCK_WIDTH);
+    controlDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
     addDockWidget(Qt::LeftDockWidgetArea, controlDock);
 }
 
@@ -139,7 +140,10 @@ void MainWindow::onFindPathClicked() {
         return;
     }
     m_findPathButton->setEnabled(false);
-    m_pathFinder->findPath();
+
+    QMetaObject::invokeMethod(m_pathFinder, "findPath", Qt::QueuedConnection,
+                              Q_ARG(QPoint, m_model->endPoint()),
+                              Q_ARG(bool, false));
 }
 
 void MainWindow::onCalculationFinished() {

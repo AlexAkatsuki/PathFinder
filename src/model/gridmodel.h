@@ -37,8 +37,8 @@ public:
     int width() const;
     int height() const;
 
-    QPoint startPoint() const { return m_start; }
-    QPoint endPoint() const { return m_end; }
+    QPoint startPoint() const;
+    QPoint endPoint() const;
 
     void clearPoints();
 

@@ -13,6 +13,8 @@ class GridScene final : public QGraphicsScene {
 
     static constexpr int CELL_SIZE = 30;
 
+    static constexpr int INTERVAL_ms = 50;
+
 public:
     explicit GridScene(GridModel *model, PathFinder *pathFinder, QObject *parent = nullptr);
 
@@ -21,8 +23,7 @@ public:
 
 public slots:
     void onGridChanged();
-    void onPathFound(const std::vector<QPoint> &path);
-    void onPathToFound(const std::vector<QPoint> &path);
+    void onPathFound(const std::vector<QPoint> &path, bool isPreview);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
@@ -44,7 +45,6 @@ private:
 
     QPoint sceneToGrid(const QPointF &scenePos) const;
 
-    void updatePathDisplay();
     void updatePreviewPath();
     void updateMainPathDisplay();
 

@@ -8,12 +8,11 @@ GridScene::GridScene(GridModel *model, PathFinder *pathFinder, QObject *parent)
     : QGraphicsScene(parent), m_model(model), m_pathFinder(pathFinder) {
 
     m_previewTimer.setSingleShot(true);
-    m_previewTimer.setInterval(50); // 50ms задержка
+    m_previewTimer.setInterval(INTERVAL_ms);
     connect(&m_previewTimer, &QTimer::timeout, this, &GridScene::onPreviewTimerTimeout);
 
     connect(m_model, &GridModel::gridChanged, this, &GridScene::onGridChanged);
     connect(m_pathFinder, &PathFinder::pathFound, this, &GridScene::onPathFound);
-    connect(m_pathFinder, &PathFinder::pathToFound, this, &GridScene::onPathToFound);
 
     setBackgroundBrush(QBrush(Qt::lightGray));
 }
@@ -69,7 +68,6 @@ void GridScene::clearPath() {
     for (QGraphicsItem* item : allItems) {
         if (QGraphicsRectItem* rectItem = dynamic_cast<QGraphicsRectItem*>(item)) {
             QColor brushColor = rectItem->brush().color();
-            // Удаляем и синий путь, и preview
             if ((brushColor.alpha() == 255 && brushColor == Qt::blue) ||
                 (brushColor.alpha() == 150 && brushColor.red() == 173 &&
                  brushColor.green() == 216 && brushColor.blue() == 230)) {
@@ -84,14 +82,14 @@ void GridScene::onGridChanged() {
     drawGrid();
 }
 
-void GridScene::onPathFound(const std::vector<QPoint> &path) {
-    m_currentPath = path;
-    updateMainPathDisplay();
-}
-
-void GridScene::onPathToFound(const std::vector<QPoint> &path) {
-    m_previewPath = path;
-    updatePreviewPath();
+void GridScene::onPathFound(const std::vector<QPoint> &path, bool isPreview) {
+    if (isPreview) {
+        m_previewPath = path;
+        updatePreviewPath();
+    } else {
+        m_currentPath = path;
+        updateMainPathDisplay();
+    }
 }
 
 void GridScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
@@ -103,7 +101,6 @@ void GridScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
             return;
         }
 
-        // Останавливаем таймер preview при изменении точек
         m_previewTimer.stop();
 
         bool hasStart = m_model->hasStartPoint();
@@ -120,7 +117,6 @@ void GridScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
             m_model->setStartPoint(gridPos);
         }
 
-        // Очищаем ВСЕ пути при изменении точек
         clearPath();
     }
 
@@ -130,7 +126,6 @@ void GridScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 void GridScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     QPoint gridPos = sceneToGrid(event->scenePos());
 
-    // Если нет точки А - сразу очищаем preview и выходим
     if (!m_model->isValidPoint(m_model->startPoint())) {
         if (!m_previewPath.empty()) {
             m_previewPath.clear();
@@ -145,14 +140,11 @@ void GridScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         m_model->isWalkable(gridPos.x(), gridPos.y()) &&
         gridPos != m_model->startPoint()) {
 
-        // Сохраняем точку и запускаем/перезапускаем таймер
         m_pendingPreviewPoint = gridPos;
-        if (!m_previewTimer.isActive()) {
+        if (!m_previewTimer.isActive())
             m_previewTimer.start();
-        }
     }
     else {
-        // Сбрасываем preview если условия не выполняются
         m_previewTimer.stop();
         if (!m_previewPath.empty()) {
             m_previewPath.clear();
@@ -181,7 +173,60 @@ QPoint GridScene::sceneToGrid(const QPointF &scenePos) const {
     return QPoint(x, y);
 }
 
-void GridScene::updatePathDisplay() {
+void GridScene::updatePreviewPath() {
+    QList<QGraphicsItem*> allItems = items();
+    for (QGraphicsItem* item : allItems) {
+        if (QGraphicsRectItem* rectItem = dynamic_cast<QGraphicsRectItem*>(item)) {
+            QColor brushColor = rectItem->brush().color();
+            if (brushColor.alpha() == 150 &&
+                brushColor.red() == 173 &&
+                brushColor.green() == 216 &&
+                brushColor.blue() == 230) {
+                removeItem(rectItem);
+                delete rectItem;
+            }
+        }
+    }
+
+    if (m_previewPath.empty())
+        return;
+
+    for (const auto &point : m_previewPath) {
+        CellType cellType = m_model->getCell(point.x(), point.y());
+        if (cellType == CellType::Start ||
+            cellType == CellType::End ||
+            point == m_previewPath.back()) {
+            continue;
+        }
+
+        // Также пропускаем точки основного пути
+        if (std::find(m_currentPath.begin(), m_currentPath.end(), point) != m_currentPath.end()) {
+            continue;
+        }
+
+        QGraphicsRectItem *previewRect = new QGraphicsRectItem(
+            point.x() * CELL_SIZE, point.y() * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+
+        previewRect->setBrush(QBrush(QColor(173, 216, 230, 150))); // Полупрозрачный голубой
+        previewRect->setPen(QPen(Qt::blue, 1));
+
+        addItem(previewRect);
+    }
+}
+
+void GridScene::updateMainPathDisplay() {
+    QList<QGraphicsItem*> allItems = items();
+    for (QGraphicsItem* item : allItems) {
+        if (QGraphicsRectItem* rectItem = dynamic_cast<QGraphicsRectItem*>(item)) {
+            QColor brushColor = rectItem->brush().color();
+            if (brushColor.alpha() == 255 &&
+                brushColor == Qt::blue) {
+                removeItem(rectItem);
+                delete rectItem;
+            }
+        }
+    }
+
     if (m_currentPath.empty())
         return;
 
@@ -201,98 +246,16 @@ void GridScene::updatePathDisplay() {
     }
 }
 
-void GridScene::updatePreviewPath() {
-    // Удаляем ТОЛЬКО preview элементы, не трогая основной путь
-    QList<QGraphicsItem*> allItems = items();
-    for (QGraphicsItem* item : allItems) {
-        if (QGraphicsRectItem* rectItem = dynamic_cast<QGraphicsRectItem*>(item)) {
-            QColor brushColor = rectItem->brush().color();
-            // Удаляем только полупрозрачные голубые элементы (preview)
-            if (brushColor.alpha() == 150 &&
-                brushColor.red() == 173 &&
-                brushColor.green() == 216 &&
-                brushColor.blue() == 230) {
-                removeItem(rectItem);
-                delete rectItem;
-            }
-        }
-    }
-
-    // Если preview пустой - выходим
-    if (m_previewPath.empty()) return;
-
-    const int cellSize = 30;
-
-    // Добавляем новые preview элементы
-    for (const auto &point : m_previewPath) {
-        // Пропускаем старт, финиш и текущую целевую точку
-        CellType cellType = m_model->getCell(point.x(), point.y());
-        if (cellType == CellType::Start ||
-            cellType == CellType::End ||
-            point == m_previewPath.back()) {
-            continue;
-        }
-
-        // Также пропускаем точки основного пути
-        if (std::find(m_currentPath.begin(), m_currentPath.end(), point) != m_currentPath.end()) {
-            continue;
-        }
-
-        QGraphicsRectItem *previewRect = new QGraphicsRectItem(
-            point.x() * cellSize, point.y() * cellSize, cellSize, cellSize);
-
-        previewRect->setBrush(QBrush(QColor(173, 216, 230, 150))); // Полупрозрачный голубой
-        previewRect->setPen(QPen(Qt::blue, 1));
-
-        addItem(previewRect);
-    }
-}
-
-void GridScene::updateMainPathDisplay() {
-    // Удаляем ТОЛЬКО основной путь (синие элементы)
-    QList<QGraphicsItem*> allItems = items();
-    for (QGraphicsItem* item : allItems) {
-        if (QGraphicsRectItem* rectItem = dynamic_cast<QGraphicsRectItem*>(item)) {
-            QColor brushColor = rectItem->brush().color();
-            // Удаляем только синие непрозрачные элементы (основной путь)
-            if (brushColor.alpha() == 255 &&
-                brushColor == Qt::blue) {
-                removeItem(rectItem);
-                delete rectItem;
-            }
-        }
-    }
-
-    if (m_currentPath.empty()) return;
-
-    const int cellSize = 30;
-
-    for (const auto &point : m_currentPath) {
-        // Не перекрашиваем старт и финиш
-        if (m_model->getCell(point.x(), point.y()) == CellType::Start ||
-            m_model->getCell(point.x(), point.y()) == CellType::End) {
-            continue;
-        }
-
-        QGraphicsRectItem *pathRect = new QGraphicsRectItem(
-            point.x() * cellSize, point.y() * cellSize, cellSize, cellSize);
-
-        pathRect->setBrush(QBrush(Qt::blue));
-        pathRect->setPen(QPen(Qt::black, 1));
-
-        addItem(pathRect);
-    }
-}
-
 void GridScene::onPreviewTimerTimeout() {
     if (m_model->isValidPoint(m_pendingPreviewPoint) &&
         m_model->isValidPoint(m_model->startPoint()) &&
         m_model->isWalkable(m_pendingPreviewPoint.x(), m_pendingPreviewPoint.y()) &&
         m_pendingPreviewPoint != m_model->startPoint()) {
 
-        m_pathFinder->findPathTo(m_pendingPreviewPoint);
+        QMetaObject::invokeMethod(m_pathFinder, "findPath", Qt::QueuedConnection,
+                                  Q_ARG(QPoint, m_pendingPreviewPoint),
+                                  Q_ARG(bool, true));
     } else {
-        // Если условия не выполняются - очищаем preview
         if (!m_previewPath.empty()) {
             m_previewPath.clear();
             updatePreviewPath();
