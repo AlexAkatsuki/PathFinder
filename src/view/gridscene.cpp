@@ -7,6 +7,10 @@
 GridScene::GridScene(GridModel *model, PathFinder *pathFinder, QObject *parent)
     : QGraphicsScene(parent), m_model(model), m_pathFinder(pathFinder) {
 
+    m_previewTimer.setSingleShot(true);
+    m_previewTimer.setInterval(50); // 50ms задержка
+    connect(&m_previewTimer, &QTimer::timeout, this, &GridScene::onPreviewTimerTimeout);
+
     connect(m_model, &GridModel::gridChanged, this, &GridScene::onGridChanged);
     connect(m_pathFinder, &PathFinder::pathFound, this, &GridScene::onPathFound);
     connect(m_pathFinder, &PathFinder::pathToFound, this, &GridScene::onPathToFound);
@@ -99,15 +103,30 @@ void GridScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     QGraphicsScene::mousePressEvent(event);
 }
 
-// void GridScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-//     QPoint gridPos = sceneToGrid(event->scenePos());
-//     if (m_model->isValidPoint(gridPos) && m_model->isValidPoint(m_model->startPoint()))
-//         m_pathFinder->findPathTo(gridPos);
-//     else
-//         onPathToFound({});
+void GridScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    QPoint gridPos = sceneToGrid(event->scenePos());
 
-//     QGraphicsScene::mouseMoveEvent(event);
-// }
+    if (m_model->isValidPoint(gridPos) &&
+        m_model->isValidPoint(m_model->startPoint()) &&
+        m_model->isWalkable(gridPos.x(), gridPos.y()) &&
+        gridPos != m_model->startPoint()) {
+
+        // Сохраняем точку и запускаем/перезапускаем таймер
+        m_pendingPreviewPoint = gridPos;
+        if (!m_previewTimer.isActive())
+            m_previewTimer.start();
+    }
+    else {
+        // Сбрасываем preview
+        m_previewTimer.stop();
+        if (!m_previewPath.empty()) {
+            m_previewPath.clear();
+            updatePreviewPath();
+        }
+    }
+
+    QGraphicsScene::mouseMoveEvent(event);
+}
 
 QColor GridScene::getCellColor(CellType type) const {
     switch (type) {
@@ -170,4 +189,11 @@ void GridScene::updatePreviewPath() {
     }
     if (!m_currentPath.empty())
         updatePathDisplay();
+}
+
+void GridScene::onPreviewTimerTimeout() {
+    if (m_model->isValidPoint(m_pendingPreviewPoint) &&
+        m_model->isValidPoint(m_model->startPoint())) {
+        m_pathFinder->findPathTo(m_pendingPreviewPoint);
+    }
 }
