@@ -14,27 +14,19 @@ GridScene::GridScene(GridModel *model, PathFinder *pathFinder, QObject *parent)
     setBackgroundBrush(QBrush(Qt::lightGray));
 }
 
-void GridScene::drawGrid()
-{
-    qDebug() << "Drawing grid:" << m_model->width() << "x" << m_model->height();
-
-    // Полностью очищаем сцену
+void GridScene::drawGrid() {
     clear();
 
-    if (m_model->width() <= 0 || m_model->height() <= 0) {
+    if (m_model->width() <= 0 || m_model->height() <= 0)
         return;
-    }
 
-    const int cellSize = 30;
-
-    // Рисуем все ячейки
     for (int y = 0; y < m_model->height(); ++y) {
         for (int x = 0; x < m_model->width(); ++x) {
             auto cellType = m_model->getCell(x, y);
             auto color = getCellColor(cellType);
 
             QGraphicsRectItem *rect = new QGraphicsRectItem(
-                x * cellSize, y * cellSize, cellSize, cellSize);
+                x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
 
             rect->setBrush(QBrush(color));
             rect->setPen(QPen(Qt::black, 1));
@@ -42,7 +34,6 @@ void GridScene::drawGrid()
 
             addItem(rect);
 
-            // Добавляем буквы для точек А и Б
             if (cellType == CellType::Start || cellType == CellType::End) {
                 QString letter = (cellType == CellType::Start) ? "A" : "Б";
                 QColor textColor = (cellType == CellType::Start) ? Qt::black : Qt::white;
@@ -51,11 +42,10 @@ void GridScene::drawGrid()
                 textItem->setDefaultTextColor(textColor);
                 textItem->setFont(QFont("Arial", 12, QFont::Bold));
 
-                // Центрируем текст в ячейке
                 QRectF textRect = textItem->boundingRect();
                 textItem->setPos(
-                    x * cellSize + (cellSize - textRect.width()) / 2,
-                    y * cellSize + (cellSize - textRect.height()) / 2
+                    x * CELL_SIZE + (CELL_SIZE - textRect.width()) / 2,
+                    y * CELL_SIZE + (CELL_SIZE - textRect.height()) / 2
                     );
 
                 addItem(textItem);
@@ -63,8 +53,7 @@ void GridScene::drawGrid()
         }
     }
 
-    // Устанавливаем размер сцены
-    QRectF sceneRect(0, 0, m_model->width() * cellSize, m_model->height() * cellSize);
+    QRectF sceneRect(0, 0, m_model->width() * CELL_SIZE, m_model->height() * CELL_SIZE);
     setSceneRect(sceneRect);
 }
 
@@ -89,25 +78,18 @@ void GridScene::onPathToFound(const std::vector<QPoint> &path) {
 
 void GridScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     QPoint gridPos = sceneToGrid(event->scenePos());
-    qDebug() << "=== Mouse Press ===";
-    qDebug() << "Grid position:" << gridPos;
-    qDebug() << "Current hasStart:" << m_model->hasStartPoint() << "hasEnd:" << m_model->hasEndPoint();
 
     if (m_model->isValidPoint(gridPos) && event->button() == Qt::LeftButton) {
 
         if (!m_model->isWalkable(gridPos.x(), gridPos.y())) {
-            qDebug() << "Cannot set point on wall";
             QGraphicsScene::mousePressEvent(event);
             return;
         }
 
-        // Простая логика
-        if (!m_model->hasStartPoint()) {
+        if (!m_model->hasStartPoint())
             m_model->setStartPoint(gridPos);
-        }
-        else if (!m_model->hasEndPoint()) {
+        else if (!m_model->hasEndPoint())
             m_model->setEndPoint(gridPos);
-        }
         else {
             m_model->clearPoints();
             m_model->setStartPoint(gridPos);
@@ -150,13 +132,11 @@ void GridScene::updatePathDisplay() {
         return;
 
     for (const auto &point : m_currentPath) {
-        // Не перекрашиваем старт и финиш
         if (m_model->getCell(point.x(), point.y()) == CellType::Start ||
             m_model->getCell(point.x(), point.y()) == CellType::End) {
             continue;
         }
 
-        // Создаем прямоугольник для пути
         QGraphicsRectItem *pathRect = new QGraphicsRectItem(
             point.x() * CELL_SIZE, point.y() * CELL_SIZE, CELL_SIZE, CELL_SIZE);
 
@@ -168,14 +148,12 @@ void GridScene::updatePathDisplay() {
 }
 
 void GridScene::updatePreviewPath() {
-    // Простой способ - перерисовать сетку и добавить preview
-    // Это не оптимально, но гарантированно работает
-    drawGrid(); // Перерисовываем базовую сетку
+    drawGrid();
 
-    if (m_previewPath.empty()) return;
+    if (m_previewPath.empty())
+        return;
 
     for (const auto &point : m_previewPath) {
-        // Не перекрашиваем старт, финиш и текущую целевую точку
         if (m_model->getCell(point.x(), point.y()) == CellType::Start ||
             m_model->getCell(point.x(), point.y()) == CellType::End ||
             point == m_previewPath.back()) {
@@ -190,8 +168,6 @@ void GridScene::updatePreviewPath() {
 
         addItem(previewRect);
     }
-
-    // Также отображаем основной путь если он есть
     if (!m_currentPath.empty())
         updatePathDisplay();
 }

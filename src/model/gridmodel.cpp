@@ -6,10 +6,17 @@ GridModel::GridModel(QObject *parent) : QObject(parent) {
 }
 
 void GridModel::initialize(int width, int height) {
-    if (width < MIN_WIDTH_cnt) width = MIN_WIDTH_cnt;
-    if (height < MIN_HEIGHT_cnt) height = MIN_HEIGHT_cnt;
-    if (width > MAX_WIDTH_cnt) width = MAX_WIDTH_cnt;
-    if (height > MAX_HEIGHT_cnt) height = MAX_HEIGHT_cnt;
+
+    //Можно заменить на тернарный оператор, но в таком случае это будет
+    // межденнее работать, и выглядеть менее читаемо
+    if (width < MIN_WIDTH_cnt)
+        width = MIN_WIDTH_cnt;
+    if (height < MIN_HEIGHT_cnt)
+        height = MIN_HEIGHT_cnt;
+    if (width > MAX_WIDTH_cnt)
+        width = MAX_WIDTH_cnt;
+    if (height > MAX_HEIGHT_cnt)
+        height = MAX_HEIGHT_cnt;
 
     m_width = width;
     m_height = height;
@@ -75,7 +82,6 @@ int GridModel::height() const {
 }
 
 void GridModel::clearPoints() {
-    // Очищаем старые точки на сетке
     if (isValidPoint(m_start)) {
         m_grid[m_start.y()][m_start.x()] = CellType::Empty;
     }
@@ -88,57 +94,44 @@ void GridModel::clearPoints() {
 
     emit startPointChanged(m_start);
     emit endPointChanged(m_end);
-    emit gridChanged();  // Явно испускаем сигнал;
+    emit gridChanged();
 }
 
 void GridModel::setStartPoint(const QPoint &point) {
-    qDebug() << "GridModel::setStartPoint called with:" << point;
+
     if (isValidPoint(point) && isWalkable(point.x(), point.y())) {
-        // Очищаем старую точку А
-        if (isValidPoint(m_start)) {
-            qDebug() << "Clearing old start point:" << m_start;
+        if (isValidPoint(m_start))
             m_grid[m_start.y()][m_start.x()] = CellType::Empty;
-        }
 
         m_start = point;
         m_grid[point.y()][point.x()] = CellType::Start;
-        qDebug() << "New start point set:" << m_start;
+
         emit startPointChanged(point);
         emit gridChanged();
-    } else {
-        qDebug() << "setStartPoint failed - point not valid or not walkable";
     }
 }
 
 void GridModel::setEndPoint(const QPoint &point) {
-    qDebug() << "GridModel::setEndPoint called with:" << point;
+
     if (isValidPoint(point) && isWalkable(point.x(), point.y())) {
-        // Очищаем старую точку Б
-        if (isValidPoint(m_end)) {
-            qDebug() << "Clearing old end point:" << m_end;
+
+        if (isValidPoint(m_end))
             m_grid[m_end.y()][m_end.x()] = CellType::Empty;
-        }
 
         m_end = point;
         m_grid[point.y()][point.x()] = CellType::End;
-        qDebug() << "New end point set:" << m_end;
+
         emit endPointChanged(point);
         emit gridChanged();
-    } else {
-        qDebug() << "setEndPoint failed - point not valid or not walkable";
     }
 }
 
 bool GridModel::hasStartPoint() const {
-    bool hasStart = (m_start != QPoint(-1, -1));
-    qDebug() << "hasStartPoint() returning:" << hasStart << "point:" << m_start;
-    return hasStart;
+    return (m_start != QPoint(-1, -1));
 }
 
 bool GridModel::hasEndPoint() const {
-    bool hasEnd = (m_end != QPoint(-1, -1));
-    qDebug() << "hasEndPoint() returning:" << hasEnd << "point:" << m_end;
-    return hasEnd;
+    return (m_end != QPoint(-1, -1));
 }
 
 bool GridModel::isValidPoint(const QPoint &point) const {

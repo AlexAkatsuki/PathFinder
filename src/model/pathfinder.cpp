@@ -23,9 +23,7 @@ void PathFinder::findPath() {
         return;
     }
 
-    // Проверяем, не слишком ли большое поле для поиска
     if (m_model->width() * m_model->height() > 10000) {
-        qWarning() << "Grid too large for pathfinding";
         emit pathFound({});
         emit calculationFinished();
         return;
@@ -71,10 +69,10 @@ std::vector<QPoint> PathFinder::bfs(const QPoint &start, const QPoint &end) {
     visited[start.y()][start.x()] = true;
 
     const QPoint directions[] = {
-        QPoint(0, 1),   // down
-        QPoint(1, 0),   // right
-        QPoint(0, -1),  // up
-        QPoint(-1, 0)   // left
+        QPoint(0, 1),   // вниз
+        QPoint(1, 0),   // вправо
+        QPoint(0, -1),  // вверх
+        QPoint(-1, 0)   // влево
     };
 
     int steps = 0;
@@ -127,10 +125,10 @@ std::vector<QPoint> PathFinder::bfsWithLimit(const QPoint &start,
     visited[start.y()][start.x()] = true;
 
     const QPoint directions[] = {
-        QPoint(0, 1),   // down
-        QPoint(1, 0),   // right
-        QPoint(0, -1),  // up
-        QPoint(-1, 0)   // left
+        QPoint(0, 1),   // вниз
+        QPoint(1, 0),   // вправо
+        QPoint(0, -1),  // вверх
+        QPoint(-1, 0)   // влево
     };
 
     int steps = 0;

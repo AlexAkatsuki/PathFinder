@@ -51,15 +51,15 @@ void MainWindow::setupUI() {
 
     m_widthLabel = new QLabel("Ширина:");
     m_widthSpinBox = new QSpinBox();
-    m_widthSpinBox->setMinimum(5);
-    m_widthSpinBox->setMaximum(100);
-    m_widthSpinBox->setValue(20);
+    m_widthSpinBox->setMinimum(MIN_SPINBOX_VAL);
+    m_widthSpinBox->setMaximum(MAX_SPINBOX_VAL);
+    m_widthSpinBox->setValue(DEFAULT_SPINBOX_VAL);
 
     m_heightLabel = new QLabel("Высота:");
     m_heightSpinBox = new QSpinBox();
-    m_heightSpinBox->setMinimum(5);
-    m_heightSpinBox->setMaximum(100);
-    m_heightSpinBox->setValue(20);
+    m_heightSpinBox->setMinimum(MIN_SPINBOX_VAL);
+    m_heightSpinBox->setMaximum(MAX_SPINBOX_VAL);
+    m_heightSpinBox->setValue(DEFAULT_SPINBOX_VAL);
 
     m_generateButton = new QPushButton("Генерировать");
     m_findPathButton = new QPushButton("Найти путь");
@@ -95,15 +95,19 @@ void MainWindow::setupUI() {
 
     QDockWidget *controlDock = new QDockWidget("Управление", this);
     controlDock->setWidget(controlWidget);
-    controlDock->setFixedWidth(200);
+    controlDock->setFixedWidth(DOCK_WIDTH);
     addDockWidget(Qt::LeftDockWidgetArea, controlDock);
 }
 
 void MainWindow::setupConnections() {
-    connect(m_generateButton, &QPushButton::clicked, this, &MainWindow::onGenerateClicked);
-    connect(m_findPathButton, &QPushButton::clicked, this, &MainWindow::onFindPathClicked);
-    connect(m_pathFinder, &PathFinder::calculationFinished, this, &MainWindow::onCalculationFinished);
-    connect(m_pathFinder, &PathFinder::pathNotFound, this, &MainWindow::onPathNotFound);
+    connect(m_generateButton, &QPushButton::clicked, this,
+                              &MainWindow::onGenerateClicked);
+    connect(m_findPathButton, &QPushButton::clicked, this,
+                              &MainWindow::onFindPathClicked);
+    connect(m_pathFinder, &PathFinder::calculationFinished, this,
+                          &MainWindow::onCalculationFinished);
+    connect(m_pathFinder, &PathFinder::pathNotFound, this,
+                          &MainWindow::onPathNotFound);
 }
 
 void MainWindow::onGenerateClicked() {
@@ -160,7 +164,7 @@ bool MainWindow::validateInput() {
     int width = m_widthSpinBox->value();
     int height = m_heightSpinBox->value();
 
-    if (width * height > 2500) {
+    if (width * height > MAX_GRID_SIZE) {
         showError("Выбран большой размер сетки (" + QString::number(width) + "×" +
             QString::number(height) + " = " + QString::number(width * height) + " ячеек).\n\n"
             "Это может замедлить:\n"
@@ -206,8 +210,8 @@ void MainWindow::restoreWindowState() {
     if (m_settings.contains("window/geometry")) {
         restoreGeometry(m_settings.value("window/geometry").toByteArray());
     } else {
-        resize(1000, 700);
-        move(100, 100);
+        resize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        move(DEFAULT_X_POSE, DEFAULT_Y_POSE);
     }
 
     if (m_settings.contains("window/state"))
