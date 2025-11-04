@@ -13,7 +13,9 @@ PathFinder::PathFinder(GridModel *model, QObject *parent)
 PathFinder::~PathFinder() {
     if (m_workerThread.isRunning()) {
         m_workerThread.quit();
-        m_workerThread.wait(1000);
+
+        if (!m_workerThread.wait(1000))
+            m_workerThread.terminate();
     }
 }
 

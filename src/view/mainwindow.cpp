@@ -35,8 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
     restoreWindowState();
 }
 
-MainWindow::~MainWindow() {
-}
+MainWindow::~MainWindow() { }
 
 void MainWindow::setupUI() {
     setWindowTitle("Path Finder");
